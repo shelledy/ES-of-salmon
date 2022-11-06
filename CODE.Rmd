@@ -1,0 +1,499 @@
+---
+title: "Code for Project (final)"
+author: "Katie Shelledy"
+date: "2022-11-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load necessary libraries:
+```{r}
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+library("syuzhet")
+library("tidyverse")
+library("cowplot")
+library("DataCombine")
+library("gridExtra")
+library("ggpubr")
+library("ggwordcloud")
+```
+
+Step 1: Upload applicable data sets
+```{r}
+rawdata <- read.csv("RawDataB.csv")
+services <- read.csv("ServicesB.csv")
+```
+
+Step 2: Prep datasets (pare down, combine)
+```{r}
+##save important columns##
+rawdata <- rawdata[,c("Paper_Number","Journal","Type_of_paper","Lead_author_discipline","Region")]
+
+##remove unnecessary column##
+services <- select(services,-"Service_in_my_words")
+services <- services %>% mutate_all(na_if,"")
+
+##merge dataframes for analysis
+data <- merge(rawdata, services, by = "Paper_Number")
+
+##remove old data frames from workspace##
+rm(services)
+```
+
+Step 3. ES Distributions_set up data
+```{r}
+##Data_prep
+data <- select(data, -c(CICES_division1, CICES_group1, CICES_class1, CICES_division2, CICES_group2, CICES_class2, CICES_division3, CICES_group3, CICES_class3))#remove columns that will make the code tedious
+
+ES1<-select(data, c(Paper_Number:Type_of_interaction, CICES_section1:CICES_code1, EE_domain1:EE_code1))
+ES2<-select(data, c(Paper_Number:Type_of_interaction, CICES_section2:CICES_code2, EE_domain2:EE_code2))
+ES3<-select(data, c(Paper_Number:Type_of_interaction, CICES_section3:CICES_code3, EE_domain3:EE_code3))#Create three databases to separate ES counts
+
+ES1 <- rename(ES1, "CICES_section" = CICES_section1, "CICES_code" = CICES_code1, "EE_domain" = EE_domain1, "EE_code" = EE_code1)
+ES2 <- rename(ES2, "CICES_section" = CICES_section2, "CICES_code" = CICES_code2, "EE_domain" = EE_domain2, "EE_code" = EE_code2)
+ES3 <- rename(ES3, "CICES_section" = CICES_section3, "CICES_code" = CICES_code3, "EE_domain" = EE_domain3, "EE_code" = EE_code3)#rename to have consistent column name
+
+ES <- rbind(ES1, ES2, ES3)
+rm(ES1,ES2,ES3)
+```
+
+Step 4: Rename CICES codes with meanings
+```{r}
+EScode <- data.frame(
+  code = c("1.1.4.1","1.1.4.2","1.1.4.3","1.1.6.1","1.1.6.2","1.1.6.3","1.2.2.1","1.2.2.3","1.3.X.X","2.1.1.2","2.2.1.1","2.2.1.3","2.2.2.1","2.2.2.2","2.2.2.3","2.2.3.1","2.2.4.2","2.2.5.1","2.2.5.2","2.3.X.X","3.1.1.1","3.1.1.2","3.1.2.1","3.1.2.2","3.1.2.3","3.1.2.4","3.2.1.1","3.2.1.2","3.2.1.3","3.2.2.1","3.2.2.2","3.3.X.X"), 
+  name = c( "nutrition","materials","energy","nutrition","materials","energy","biodiversity","novel biology","profit","C sequestration","erosion","water flow","pollination","seed dispersal","nursery","invasive species","soil quality","freshwater quality","marine water quality","other reg","active recreation","passive recreation","knowledge","education","heritage","aesthetic","symbol","religion","representation","existence","bequest","other cultural"))
+
+ES <- FindReplace(data = ES, Var = "CICES_code", replaceData = EScode, from = "code", to = "name", exact = TRUE, vector = FALSE)
+
+rm(EScode)
+```
+
+Figure 1: Summary Data_Characterizing Papers
+```{r}
+##Data Prep##
+Journal <- count(rawdata, rawdata$Journal)#create a data table with journal counts
+names(Journal) <- c("Journal", "n")#rename column title to get rid of long 
+Jshort <- data.frame(
+  long = c("Canadian Journal of Fisheries and Aquatic Sciences","Journal of the North American Benthological Society", "Environmental Biology of Fishes"), 
+  short = c( "Can J Fish Aquat Sci","J North Am Benthol Soc", "Environ Biol Fishes")) ##create database to rename long journals
+Journal <- FindReplace(data = Journal, Var = "Journal", replaceData = Jshort, from = "long", to = "short", exact = TRUE, vector = FALSE)##Rename long journals
+rm(Jshort)##Delete database for renaming
+Journal <- Journal[order(-Journal$n),] #sort into descending order
+Journal <- Journal[Journal$n>4,]#remove journals with less than 4 papers
+
+Paper <- count(rawdata, rawdata$Type_of_paper)#create a data table with counts for each paper type (review, case study, etc.)
+names(Paper) <- c("Type", "n")#rename column title to get rid of long column name
+###THIS NEXT BATCH OF CODE ADDS OVERLAPPING PAPER TYPES TOGETHER, so that there is one value for each paper type#####
+Paper[Paper$Type=="Observational",2]<-Paper[Paper$Type=="Observational",2]+Paper[Paper$Type=="Observational & modelling",2]+Paper[Paper$Type=="Observational & experiment",2] ##observational_type
+Paper[Paper$Type=="Modelling",2]<-Paper[Paper$Type=="Modelling",2]+Paper[Paper$Type=="Observational & modelling",2]+Paper[Paper$Type=="Experiment & modelling",2]+Paper[Paper$Type=="Review & modelling",2]##Modelling_type
+Paper[Paper$Type=="Review",2]<-Paper[Paper$Type=="Review",2]+Paper[Paper$Type=="Perspective & review",2]+Paper[Paper$Type=="Review & case study",2]+Paper[Paper$Type=="Review & modelling",2]##Review_type
+Paper[Paper$Type=="Experiment",2]<-Paper[Paper$Type=="Experiment",2]+Paper[Paper$Type=="Experiment & modelling",2]+Paper[Paper$Type=="Observational & experiment",2]##experiment_type
+Paper[Paper$Type=="Case study",2]<-Paper[Paper$Type=="Case study",2]+Paper[Paper$Type=="Multiple case studies",2]+Paper[Paper$Type=="Review & case study",2]##Case_study_type
+Paper[Paper=="Perspective & review"] <- "Perspective"
+Paper <- subset(Paper, Type != "Experiment & modelling")
+Paper <- subset(Paper, Type != "Observational & modelling")
+Paper <- subset(Paper, Type != "Observational & experiment")
+Paper <- subset(Paper, Type != "Multiple case studies")
+Paper <- subset(Paper, Type != "Review & case study")
+Paper <- subset(Paper, Type != "Review & modelling")
+Paper <- Paper[order(-Paper$n),] #sort into descending order
+
+Location <- count(rawdata, rawdata$Region)#create a data table with Locations
+names(Location) <- c("Location", "n")#rename column title to get rid of long column name
+Location <- Location[order(-Location$n),] #sort into descending order
+Location <- subset(Location, Location!="N/A" & Location!="Pacific")
+
+#Plot all together GGPLOT ##
+G1 <- ggplot(Location, aes(x=fct_inorder(Location), y=n))+ 
+  geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + 
+  theme_cowplot() + 
+  xlab("Location") + 
+  ylab("Paper count") + 
+  theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold")) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
+  
+G2 <- ggplot(Paper, aes(x=fct_inorder(Type), y=n))+ geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + theme_cowplot() + xlab("Study type")+ theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold"), axis.title.y=element_blank()) + scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
+
+G3 <- ggplot(Journal, aes(x=fct_inorder(Journal), y=n))+ geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + theme_cowplot() + xlab("Journal") + theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold"), axis.title.y=element_blank()) + scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
+
+ggarrange(G1, G2,
+          labels = c("A", "B"),
+          ncol = 2, nrow =1,
+          align = "h", font.label = list(size = 16))
+
+#helpful website: https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html
+```
+
+Figure 2: ES overall distribution across domains
+
+2.1: Data prep
+```{r}
+h.CICES <- ES %>% group_by(CICES_section) %>% count(Hatchery_fish, sort = TRUE)
+h.CICES <- subset(h.CICES, Hatchery_fish != "No")
+h.CICES <- subset(h.CICES, CICES_section != "N/A")
+
+h.EE <- ES %>% group_by(EE_domain) %>% count(Hatchery_fish)
+h.EE <- subset(h.EE, Hatchery_fish != "No")
+h.EE <- subset(h.EE, EE_domain != "N/A")
+```
+
+2.2: Create graphs
+```{r}
+hFWC <- ggplot() + 
+  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(legend.title=element_blank(), axis.title=element_text(size=18, face = "bold"), axis.title.y=element_blank(), axis.title.x=element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20), legend.text=element_text(size = 20)) + 
+  scale_x_discrete() +
+  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) +
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red")) +
+  coord_flip() 
+
+hFWE <- ggplot() + 
+  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() +
+  theme(axis.title=element_text(size=18, face = "bold"), axis.title.y = element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20)) +
+  scale_x_discrete() +
+  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity") +
+  coord_flip() + 
+  ylab("count")
+```
+
+2.3: Create paneled graphic
+```{r}
+ggarrange(hFWC, hFWE, 
+          labels = c("CICES", "EEScF"),
+          common.legend = TRUE, legend = "bottom",
+          ncol = 1, nrow = 2, align = "v",
+          font.label = list(size = 18),
+          heights = c(3,5))
+
+##print default dimensions
+```
+
+Figures 3-4: ES distribution within each framewor
+
+3-4.1: Rename long codes to make graphs easier to read
+```{r}
+EScode <- data.frame(
+  original = c("Processing, Preserving, Cooking", "Indigenous Management Systems", "Indigenous Laws, Government & Institutions", "Passing to Future Generations", "Gatherings, Ceremonies", "Indigenous Commercial Fisheries", "Traditional Values", "Traditional Knowledge", "Spiritual & Belief Systems", "Treaties & Agreements"), 
+  shortened = c("Process, Cook", "Indig Manag Sys", "Indig Law & Gov", "Future Gen", "Ceremonies", "Indig Comm Fish", "Trad Values", "Trad Knowledge", "Belief Systems", "Treaties"))
+
+ES <- FindReplace(data = ES, Var = "EE_code", replaceData = EScode, from = "original", to = "shortened", exact = TRUE, vector = FALSE)
+
+rm(EScode)
+```
+
+3-4.2: Create sub-data tables for graphing purposes
+```{r}
+###For ES dist
+PES <- ES[ES$CICES_section=="Provisioning ",]#select for specific values
+PES <- PES[complete.cases(PES[, "CICES_section"]), ]##remove NAs
+
+RES <- ES[ES$CICES_section=="Regulation & Maintenance ",]
+RES <- RES[complete.cases(RES[, "CICES_section"]), ]
+
+CES <- ES[ES$CICES_section=="Cultural ",]
+CES <- CES[complete.cases(CES[, "CICES_section"]), ]
+
+KEES <- ES[ES$EE_domain=="Knowledge & Practices",]
+KEES <- KEES[complete.cases(KEES[, "EE_domain"]), ]
+
+LEES <- ES[ES$EE_domain=="Livelihood",]
+LEES <- LEES[complete.cases(LEES[, "EE_domain"]), ]
+
+IEES <- ES[ES$EE_domain=="Indigenous Management",]
+IEES <- IEES[complete.cases(IEES[, "EE_domain"]), ]
+
+SEES <- ES[ES$EE_domain=="Social",]
+SEES <- SEES[complete.cases(SEES[, "EE_domain"]), ]
+
+HEES <- ES[ES$EE_domain=="Health",]
+HEES <- HEES[complete.cases(HEES[, "EE_domain"]), ]
+
+###For hatchery count DIST
+h.CICES <- ES %>% group_by(CICES_code) %>% count(Hatchery_fish)##add CICES_data
+h.CICES <- subset(h.CICES, Hatchery_fish != "No")
+h.CICES <- subset(h.CICES, CICES_code != "N/A")
+
+h.EE <- ES %>% group_by(EE_code) %>% count(Hatchery_fish)
+h.EE <- subset(h.EE, Hatchery_fish != "No")
+h.EE <- subset(h.EE, EE_code != "N/A")
+
+##further subsets for hatchery ES mapping
+Ph.CICES <- h.CICES[h.CICES$CICES_code %in% c("energy", "materials", "novel biology", "nutrition","profit"), ]
+Rh.CICES <- h.CICES[h.CICES$CICES_code %in% c("freshwater quality", "invasive species", "nursery", "soil quality"), ]
+Ch.CICES <- h.CICES[h.CICES$CICES_code %>% c("active recreation", "aesthetic", "education", "existence", "heritage", "knowledge", "other", "religion"), ]
+
+Kh.EE <- h.EE[h.EE$EE_code %in% c("Fishing Activities"), ]
+Lh.EE <- h.EE[h.EE$EE_code %in% c("Food", "Indig Comm Fish"),]
+Ih.EE <- h.EE[h.EE$EE_code %in% c("Treaties"),]
+Sh.EE <- h.EE[h.EE$EE_code %in% c("Ceremonies"),]
+#Hh.EE None for health
+```
+
+3-4.3: Create graphs
+```{r}
+CICES1 <- ggplot() + 
+  geom_bar(data=PES, color = "black", aes(x=CICES_code, fill = Category), width = 0.5, alpha =0.7) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(),axis.title.y=element_blank(), axis.title.x=element_blank()) + 
+  coord_flip() +
+  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) +
+  geom_bar(data = Ph.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), size = 1.5, width = 1, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red"))
+
+CICES2 <- ggplot() + 
+  geom_bar(data=RES, aes(x=CICES_code, fill = Category), color = "black", width = 0.5, alpha = 0.7) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() +
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.text.x = element_text(), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
+  coord_flip() +
+  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
+  geom_bar(data = Rh.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red"))
+
+CICES3 <- ggplot() + 
+  geom_bar(data=CES, aes(x=CICES_code, fill = Category), color = "black", width = 0.5, alpha = 0.7) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() +
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
+  ylab("count")+ 
+  coord_flip() +
+  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
+  geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red"))
+
+EE1 <- ggplot() + 
+  geom_bar(data=KEES, aes(x=EE_code, fill = Category), color = "black", width = 0.5, alpha = 0.7) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title=element_blank(), axis.title.y=element_blank()) + 
+  ylab("count") + coord_flip() +
+  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) + 
+  geom_bar(data = Kh.EE, aes(x=EE_code, y=n, color = "Hatchery"), width = 1, size =1.5, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red"))
+
+EE2 <- ggplot() + 
+  geom_bar(data=LEES, aes(x=EE_code, fill = Category), color = "black",  width = 0.5, alpha = 0.7, show.legend = FALSE) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y = element_blank(), axis.title.x=element_blank()) + 
+  coord_flip() +
+  scale_fill_manual(values = c("plum1", "darksalmon")) +
+  geom_bar(data = Lh.EE, aes(x=EE_code, y=n), width = 1, size =1.5, alpha = 0.01, color = "red", stat = "identity")
+
+EE3 <- ggplot() + 
+  geom_bar(data=IEES, aes(x=EE_code, fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank(), axis.title.x=element_blank()) +
+  coord_flip() + 
+  scale_fill_manual(values = c("darksalmon")) +
+  geom_bar(data = Ih.EE, aes(x=EE_code, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity")
+
+EE4 <- ggplot() + 
+  geom_bar(data=SEES, aes(x=EE_code, fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
+  coord_flip() +
+  scale_fill_manual(values = c("darksalmon")) +
+  geom_bar(data = Sh.EE, aes(x=EE_code, y=n), width = 1, size=1.5, alpha = 0.01, color = "red", stat = "identity")
+
+EE5 <- ggplot() + 
+  geom_bar(data=HEES, aes(x=EE_code, fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  theme_cowplot() + 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
+  xlab("count") +
+  coord_flip() + 
+  scale_fill_manual(values = c("darksalmon")) 
+```
+
+3-4.4: Create panelled graphic
+```{r}
+##Zoom in on CICES FW SIZE500 x 750 
+ggarrange(CICES1, CICES2, CICES3,
+          labels = c("Provisioning", "Regulation/Maintenance", "Cultural"),
+          hjust=0, vjust=0.8,
+          ncol = 1, nrow =3, align = "v",
+          common.legend = TRUE, legend = "bottom",
+          font.label = list(size=18),
+          heights = c(1,2,2))
+
+##Zoom in on EE FW size 1000x750
+ggarrange(EE4, EE2, EE3, EE5, EE1,
+          labels = c("Social", "Livelihood", "Indig Management", "Health", "Knowledge & Practices"),
+          hjust=0, vjust=0.8,
+          ncol = 2, nrow = 3, align = "v",
+          common.legend = TRUE, legend = "bottom",
+          font.label = list(size=18),
+          heights = c(1,1,2))
+
+#refer to https://search.r-project.org/CRAN/refmans/ggpubr/html/ggarrange.html for label positions
+```
+
+Figure 5: Word clouds
+
+5.1: Data prep
+```{r}
+## Subset data to include only Category and Sentence_about_service
+word.clouds <- select(data, c("Category","Sentence_about_service"))
+
+##Create separate data frames for socio and eco categories
+socio.clouds <- word.clouds[word.clouds$Category == 'both' | word.clouds$Category == 'socio', ]
+socio <- socio.clouds$Sentence_about_service
+eco.clouds <- word.clouds[word.clouds$Category == 'both' | word.clouds$Category == 'eco', ]
+eco <- eco.clouds$Sentence_about_service
+
+##Prep cumulative word.cloud dataframe for analysis
+all <- word.clouds$Sentence_about_service
+
+## Load the data as a corpus
+TextDoc_all <- Corpus(VectorSource(all))
+TextDoc_socio <- Corpus(VectorSource(socio))
+TextDoc_eco <- Corpus(VectorSource(eco))
+
+#Replacing "/", "@" and "|" with space
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+
+TextDoc_all <- tm_map(TextDoc_all, toSpace, "/")
+TextDoc_all <- tm_map(TextDoc_all, toSpace, "@")
+TextDoc_all <- tm_map(TextDoc_all, toSpace, "\\|")
+
+TextDoc_socio <- tm_map(TextDoc_socio, toSpace, "/")
+TextDoc_socio <- tm_map(TextDoc_socio, toSpace, "@")
+TextDoc_socio <- tm_map(TextDoc_socio, toSpace, "\\|")
+
+TextDoc_eco <- tm_map(TextDoc_eco, toSpace, "/")
+TextDoc_eco <- tm_map(TextDoc_eco, toSpace, "@")
+TextDoc_eco <- tm_map(TextDoc_eco, toSpace, "\\|")
+
+# Convert the text to lower case
+TextDoc_all <- tm_map(TextDoc_all, content_transformer(tolower))
+TextDoc_socio <- tm_map(TextDoc_socio, content_transformer(tolower))
+TextDoc_eco <- tm_map(TextDoc_eco, content_transformer(tolower))
+# Remove numbers
+TextDoc_all <- tm_map(TextDoc_all, removeNumbers)
+TextDoc_socio <- tm_map(TextDoc_socio, removeNumbers)
+TextDoc_eco <- tm_map(TextDoc_eco, removeNumbers)
+# Remove english common stopwords
+TextDoc_all <- tm_map(TextDoc_all, removeWords, stopwords("english"))
+TextDoc_socio <- tm_map(TextDoc_socio, removeWords, stopwords("english"))
+TextDoc_eco <- tm_map(TextDoc_eco, removeWords, stopwords("english"))
+# Remove words without meaning
+TextDoc_all <- tm_map(TextDoc_all, removeWords, c("also", "salmon"))
+TextDoc_socio <- tm_map(TextDoc_socio, removeWords, c("also", "salmon"))
+TextDoc_eco <- tm_map(TextDoc_eco, removeWords, c("also", "salmon"))
+# Remove punctuations
+TextDoc_all <- tm_map(TextDoc_all, removePunctuation)
+TextDoc_socio <- tm_map(TextDoc_socio, removePunctuation)
+TextDoc_eco <- tm_map(TextDoc_eco, removePunctuation)
+
+# Build a term-document matrix
+TextDoc_all_dtm <- TermDocumentMatrix(TextDoc_all)
+dtm_all_m <- as.matrix(TextDoc_all_dtm)
+TextDoc_socio_dtm <- TermDocumentMatrix(TextDoc_socio)
+dtm_socio_m <- as.matrix(TextDoc_socio_dtm)
+TextDoc_eco_dtm <- TermDocumentMatrix(TextDoc_eco)
+dtm_eco_m <- as.matrix(TextDoc_eco_dtm)
+# Sort by descearing value of frequency
+dtm_all_v <- sort(rowSums(dtm_all_m),decreasing=TRUE)
+word_freq_all <- data.frame(word = names(dtm_all_v),freq=dtm_all_v)
+dtm_socio_v <- sort(rowSums(dtm_socio_m),decreasing=TRUE)
+word_freq_socio <- data.frame(word = names(dtm_socio_v),freq=dtm_socio_v)
+dtm_eco_v <- sort(rowSums(dtm_eco_m),decreasing=TRUE)
+word_freq_eco <- data.frame(word = names(dtm_eco_v),freq=dtm_eco_v)
+
+# Display the top 10 most frequent words
+head(word_freq_all, 10)
+```
+
+5.2: Make word clouds
+```{r}
+#generate word cloud
+word_freq_eco$word=str_replace_all(word_freq_eco$word,"[^[:graph:]]", " ")
+eco.plot <- ggplot(data = word_freq_eco[1:30,], 
+       aes(label = word, size = freq, col = freq)) + 
+  geom_text_wordcloud(rm_outside = TRUE, max_steps = 1,
+                      grid_size = 1, eccentricity = .9, show.legend = TRUE)+
+  scale_size_area(max_size = 14)+
+  theme_minimal() + 
+  theme(legend.title=element_blank(), 
+        legend.position="bottom", legend.justification = "right",
+        legend.text = element_text(size=16)) + 
+  scale_color_gradient(low="gray50", high = "gray0", guide = "none")
+
+word_freq_socio$word=str_replace_all(word_freq_socio$word,"[^[:graph:]]", " ")
+word_freq_socio <- subset(word_freq_socio, word != "–")
+socio.plot <- ggplot(data = word_freq_socio[1:30,], 
+                    aes(label = word, size = freq, col = freq)) + 
+  geom_text_wordcloud(rm_outside = TRUE, max_steps = 1,
+                      grid_size = 1, eccentricity = .9, show.legend = TRUE)+
+  scale_size_area(max_size = 14)+
+  theme_minimal() +
+  theme(legend.title=element_blank(), 
+        legend.position = "bottom", legend.justification = "right",
+        legend.text = element_text(size = 16)) +
+  scale_color_gradient(low="gray50", high = "gray0", guide = "none")
+
+```
+
+5.3: Make word clouds appear on one graphic
+```{r}
+##arrange word clouds on one graphic
+
+ggarrange(eco.plot, socio.plot,
+          labels = c("A", "B"), font.label = list(size = 18, face = "bold"), 
+          ncol = 2, nrow = 1)
+```
+
+Figure 6: Comparison of frameworks
+```{r}
+#data prep
+
+EScode <- data.frame(
+  original = c("Processing, Preserving, Cooking", "Indigenous Management Systems", "Indigenous Laws, Government & Institutions", "Passing to Future Generations", "Gatherings, Ceremonies", "Indigenous Commercial Fisheries", "Traditional Knowledge", "Spiritual & Belief Systems", "Treaties & Agreements"), 
+  shortened = c("Process, Cook", "Indig Manag Sys", "Indig Law & Gov", "Future Gen", "Ceremonies", "Indig Comm Fish", "Trad Knowledge", "Belief Systems", "Treaties"))
+
+ES <- FindReplace(data = ES, Var = "EE_code", replaceData = EScode, from = "original", to = "shortened", exact = TRUE, vector = FALSE)
+
+rm(EScode)
+
+EScode <- data.frame(
+  original = c("Indigenous Management"), 
+  shortened = c("Indig Manag"))
+
+ES <- FindReplace(data = ES, Var = "EE_domain", replaceData = EScode, from = "original", to = "shortened", exact = TRUE, vector = FALSE)
+
+rm(EScode)
+
+ES<-ES[order(ES$EE_domain),]#order based on EE_domain
+ES<-ES[order(ES$CICES_section),] ##and cICES_section
+
+ES <- na.omit(ES) #remove NAs for graphing
+
+##graphing
+
+ggplot(ES, aes(x=EE_code, y=CICES_code))+ geom_count(aes(alpha=0.5,color=Hatchery_fish))+
+  scale_color_manual(values=c("gray40", "red"))+
+  theme_cowplot()+ 
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text=element_text(size=16), axis.text.x=element_text(angle=90, vjust=0.5, hjust=1), axis.text.y=element_text(lineheight = 0.5))+
+  facet_grid(CICES_section ~ EE_domain, scales="free", space = "free") + theme(strip.text=element_text(size=10)) +
+  ylab("CICES service") + xlab("EEScF value") + guides(alpha="none")
+#600 height by 1000 width
+
+```
