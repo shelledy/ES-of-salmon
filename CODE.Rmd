@@ -153,8 +153,8 @@ hFWC <- ggplot() +
   theme_cowplot() + 
   theme(legend.title=element_blank(), axis.title=element_text(size=18, face = "bold"), axis.title.y=element_blank(), axis.title.x=element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20), legend.text=element_text(size = 20)) + 
   scale_x_discrete() +
-  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) +
-  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+  scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) +
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red")) +
   coord_flip() 
 
@@ -164,8 +164,8 @@ hFWE <- ggplot() +
   theme_cowplot() +
   theme(axis.title=element_text(size=18, face = "bold"), axis.title.y = element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20)) +
   scale_x_discrete() +
-  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
-  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity") +
+  scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") +
   coord_flip() + 
   ylab("count")
 ```
@@ -179,7 +179,7 @@ ggarrange(hFWC, hFWE,
           font.label = list(size = 18),
           heights = c(3,5))
 
-##print default dimensions
+##print default dimensions 900x500
 ```
 
 Figures 3-4: ES distribution within each framewor
@@ -251,7 +251,7 @@ CICES1 <- ggplot() +
   theme_cowplot() + 
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(),axis.title.y=element_blank(), axis.title.x=element_blank()) + 
   coord_flip() +
-  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) +
+  scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) +
   geom_bar(data = Ph.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), size = 1.5, width = 1, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
@@ -261,7 +261,7 @@ CICES2 <- ggplot() +
   theme_cowplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.text.x = element_text(), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
   coord_flip() +
-  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
+  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
   geom_bar(data = Rh.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
@@ -272,7 +272,7 @@ CICES3 <- ggplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
   ylab("count")+ 
   coord_flip() +
-  scale_fill_manual(values = c("plum1", "deepskyblue4", "darksalmon")) +
+  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
   geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
@@ -282,7 +282,7 @@ EE1 <- ggplot() +
   theme_cowplot() + 
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title=element_blank(), axis.title.y=element_blank()) + 
   ylab("count") + coord_flip() +
-  scale_fill_manual(values = c("darksalmon", "deepskyblue4", "plum1"), breaks = c("socio", "eco", "both")) + 
+  scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
   geom_bar(data = Kh.EE, aes(x=EE_code, y=n, color = "Hatchery"), width = 1, size =1.5, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
@@ -292,7 +292,7 @@ EE2 <- ggplot() +
   theme_cowplot() + 
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y = element_blank(), axis.title.x=element_blank()) + 
   coord_flip() +
-  scale_fill_manual(values = c("plum1", "darksalmon")) +
+  scale_fill_manual(values = c("#332288", "#CC6677")) +
   geom_bar(data = Lh.EE, aes(x=EE_code, y=n), width = 1, size =1.5, alpha = 0.01, color = "red", stat = "identity")
 
 EE3 <- ggplot() + 
@@ -301,7 +301,7 @@ EE3 <- ggplot() +
   theme_cowplot() + 
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank(), axis.title.x=element_blank()) +
   coord_flip() + 
-  scale_fill_manual(values = c("darksalmon")) +
+  scale_fill_manual(values = c("#CC6677")) +
   geom_bar(data = Ih.EE, aes(x=EE_code, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity")
 
 EE4 <- ggplot() + 
@@ -310,7 +310,7 @@ EE4 <- ggplot() +
   theme_cowplot() + 
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
   coord_flip() +
-  scale_fill_manual(values = c("darksalmon")) +
+  scale_fill_manual(values = c("#CC6677")) +
   geom_bar(data = Sh.EE, aes(x=EE_code, y=n), width = 1, size=1.5, alpha = 0.01, color = "red", stat = "identity")
 
 EE5 <- ggplot() + 
@@ -320,7 +320,7 @@ EE5 <- ggplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
   xlab("count") +
   coord_flip() + 
-  scale_fill_manual(values = c("darksalmon")) 
+  scale_fill_manual(values = c("#CC6677")) 
 ```
 
 3-4.4: Create panelled graphic
