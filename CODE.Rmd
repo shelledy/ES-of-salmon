@@ -36,9 +36,11 @@ Step 2: Prep datasets (pare down, combine)
 ```{r}
 ##save important columns##
 rawdata <- rawdata[,c("Paper_Number","Journal","Type_of_paper","Lead_author_discipline","Region")]
+rawdata$Paper_Number <- as.character(rawdata$Paper_Number) #convert Paper Number from integer format to character format
 
 ##remove unnecessary column##
 services <- select(services,-"Service_in_my_words")
+services$Paper_Number <- as.character(services$Paper_Number) #convert Paper Number from integer format to character format
 services <- services %>% mutate_all(na_if,"")
 
 ##merge dataframes for analysis
