@@ -77,62 +77,7 @@ ES <- FindReplace(data = ES, Var = "CICES_code", replaceData = EScode, from = "c
 
 rm(EScode)
 ```
-
-Figure 1: Summary Data_Characterizing Papers
-```{r}
-##Data Prep##
-Journal <- count(rawdata, rawdata$Journal)#create a data table with journal counts
-names(Journal) <- c("Journal", "n")#rename column title to get rid of long 
-Jshort <- data.frame(
-  long = c("Canadian Journal of Fisheries and Aquatic Sciences","Journal of the North American Benthological Society", "Environmental Biology of Fishes"), 
-  short = c( "Can J Fish Aquat Sci","J North Am Benthol Soc", "Environ Biol Fishes")) ##create database to rename long journals
-Journal <- FindReplace(data = Journal, Var = "Journal", replaceData = Jshort, from = "long", to = "short", exact = TRUE, vector = FALSE)##Rename long journals
-rm(Jshort)##Delete database for renaming
-Journal <- Journal[order(-Journal$n),] #sort into descending order
-Journal <- Journal[Journal$n>4,]#remove journals with less than 4 papers
-
-Paper <- count(rawdata, rawdata$Type_of_paper)#create a data table with counts for each paper type (review, case study, etc.)
-names(Paper) <- c("Type", "n")#rename column title to get rid of long column name
-###THIS NEXT BATCH OF CODE ADDS OVERLAPPING PAPER TYPES TOGETHER, so that there is one value for each paper type#####
-Paper[Paper$Type=="Observational",2]<-Paper[Paper$Type=="Observational",2]+Paper[Paper$Type=="Observational & modelling",2]+Paper[Paper$Type=="Observational & experiment",2] ##observational_type
-Paper[Paper$Type=="Modelling",2]<-Paper[Paper$Type=="Modelling",2]+Paper[Paper$Type=="Observational & modelling",2]+Paper[Paper$Type=="Experiment & modelling",2]+Paper[Paper$Type=="Review & modelling",2]##Modelling_type
-Paper[Paper$Type=="Review",2]<-Paper[Paper$Type=="Review",2]+Paper[Paper$Type=="Perspective & review",2]+Paper[Paper$Type=="Review & case study",2]+Paper[Paper$Type=="Review & modelling",2]##Review_type
-Paper[Paper$Type=="Experiment",2]<-Paper[Paper$Type=="Experiment",2]+Paper[Paper$Type=="Experiment & modelling",2]+Paper[Paper$Type=="Observational & experiment",2]##experiment_type
-Paper[Paper$Type=="Case study",2]<-Paper[Paper$Type=="Case study",2]+Paper[Paper$Type=="Multiple case studies",2]+Paper[Paper$Type=="Review & case study",2]##Case_study_type
-Paper[Paper=="Perspective & review"] <- "Perspective"
-Paper <- subset(Paper, Type != "Experiment & modelling")
-Paper <- subset(Paper, Type != "Observational & modelling")
-Paper <- subset(Paper, Type != "Observational & experiment")
-Paper <- subset(Paper, Type != "Multiple case studies")
-Paper <- subset(Paper, Type != "Review & case study")
-Paper <- subset(Paper, Type != "Review & modelling")
-Paper <- Paper[order(-Paper$n),] #sort into descending order
-
-Location <- count(rawdata, rawdata$Region)#create a data table with Locations
-names(Location) <- c("Location", "n")#rename column title to get rid of long column name
-Location <- Location[order(-Location$n),] #sort into descending order
-Location <- subset(Location, Location!="N/A" & Location!="Pacific")
-
-#Plot all together GGPLOT ##
-G1 <- ggplot(Location, aes(x=fct_inorder(Location), y=n))+ 
-  geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + 
-  theme_cowplot() + 
-  xlab("Location") + 
-  ylab("Paper count") + 
-  theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold")) + 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
-  
-G2 <- ggplot(Paper, aes(x=fct_inorder(Type), y=n))+ geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + theme_cowplot() + xlab("Study type")+ theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold"), axis.title.y=element_blank()) + scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
-
-G3 <- ggplot(Journal, aes(x=fct_inorder(Journal), y=n))+ geom_bar(stat = "identity", color = "black", fill = "grey50", alpha = 0.25) + theme_cowplot() + xlab("Journal") + theme(axis.text=element_text(size=16), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), axis.title=element_text(size = 18, face = "bold"), axis.title.y=element_blank()) + scale_y_continuous(expand = expansion(mult = c(0, 0.05)))
-
-ggarrange(G1, G2,
-          labels = c("A", "B"),
-          ncol = 2, nrow =1,
-          align = "h", font.label = list(size = 16))
-
 #helpful website: https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html
-```
 
 Figure 2: ES overall distribution across domains
 
@@ -147,39 +92,27 @@ h.EE <- subset(h.EE, Hatchery_fish != "No")
 h.EE <- subset(h.EE, EE_domain != "N/A")
 ```
 
+
 2.2: Create graphs
 ```{r}
 hFWC <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
-  theme_cowplot() + 
-  theme(legend.title=element_blank(), axis.title=element_text(size=18, face = "bold"), axis.title.y=element_blank(), axis.title.x=element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20), legend.text=element_text(size = 20)) + 
-  scale_x_discrete() +
-  scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) +
-  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red")) +
-  coord_flip() 
+  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red"))
 
 hFWE <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
-  theme_cowplot() +
-  theme(axis.title=element_text(size=18, face = "bold"), axis.title.y = element_blank(), axis.text.x=element_text(hjust=0.75), axis.text=element_text(size=20)) +
-  scale_x_discrete() +
-  scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
-  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") +
-  coord_flip() + 
-  ylab("count")
+  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity")
 ```
 
 2.3: Create paneled graphic
 ```{r}
 ggarrange(hFWC, hFWE, 
-          labels = c("CICES", "EEScF"),
-          common.legend = TRUE, legend = "bottom",
+          labels = c("CICES","EEScF"),
+          label.x = 0.5,
+          common.legend = TRUE, legend = "right",
           ncol = 1, nrow = 2, align = "v",
           font.label = list(size = 18),
-          heights = c(3,5))
+          heights = c(2,1))
 
 ##print default dimensions 900x500
 ```
