@@ -96,12 +96,12 @@ h.EE <- subset(h.EE, EE_domain != "N/A")
 2.2: Create graphs
 ```{r}
 hFWC <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
-  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red"))
+  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title.x=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red")) + ylab("# occurrences")
 
 hFWE <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
-  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity")
+  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title.x=element_blank(), legend.title=element_blank()) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") + ylab("# occurrences")
 ```
 
 2.3: Create paneled graphic
@@ -207,9 +207,9 @@ CICES3 <- ggplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
   ylab("count")+ 
   coord_flip() +
-  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
-  geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red"))
+  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) #+
+  #geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+ # scale_color_manual(values = c(Hatchery = "red")) #Removing code, since no hatchery fish in data, and including is adding an unnecessary NA bar
 
 EE1 <- ggplot() + 
   geom_bar(data=KEES, aes(x=EE_code, fill = Category), color = "black", width = 0.5, alpha = 0.7) + 
@@ -263,11 +263,11 @@ EE5 <- ggplot() +
 ##Zoom in on CICES FW SIZE500 x 750 
 ggarrange(CICES1, CICES2, CICES3,
           labels = c("Provisioning", "Regulation/Maintenance", "Cultural"),
-          hjust=0, vjust=0.8,
-          ncol = 1, nrow =3, align = "v",
+          label.x = c(0.3, 0.3, 0.5),
+          ncol = 3, nrow =1, align = "h",
           common.legend = TRUE, legend = "bottom",
           font.label = list(size=18),
-          heights = c(1,2,2))
+          widths = c(2,1,1))
 
 ##Zoom in on EE FW size 1000x750
 ggarrange(EE4, EE2, EE3, EE5, EE1,
