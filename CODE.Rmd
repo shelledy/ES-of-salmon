@@ -118,7 +118,7 @@ ggarrange(hFWC, hFWE,
 ##print default dimensions 1500x750
 ```
 
-Figures 3-4: ES distribution within each framewor
+Figures 3-4: ES distribution within each framework
 
 3-4.1: Rename long codes to make graphs easier to read
 ```{r}
@@ -185,29 +185,29 @@ CICES1 <- ggplot() +
   geom_bar(data=PES, color = "black", aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), width = 0.5, alpha =0.7) + 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
   theme_cowplot() + 
-  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(),axis.title.y=element_blank(), axis.title.x=element_blank()) + 
-  coord_flip() +
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), axis.title.y=element_blank(), legend.text = element_text(size=16), legend.title = element_blank()) + 
+  coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) +
   geom_bar(data = Ph.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), size = 1.5, width = 1, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
 CICES2 <- ggplot() + 
   geom_bar(data=RES, aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 100, by=50)) + 
   theme_cowplot() +
-  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.text.x = element_text(), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
-  coord_flip() +
+  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.text.x = element_text(), axis.title.y=element_blank()) + 
+  coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
   geom_bar(data = Rh.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
   scale_color_manual(values = c(Hatchery = "red"))
 
 CICES3 <- ggplot() + 
   geom_bar(data=CES, aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 75, by=25)) + 
   theme_cowplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
   ylab("count")+ 
-  coord_flip() +
+  coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) #+
   #geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
  # scale_color_manual(values = c(Hatchery = "red")) #Removing code, since no hatchery fish in data, and including is adding an unnecessary NA bar
@@ -268,7 +268,7 @@ ggarrange(CICES1, CICES2, CICES3,
           ncol = 3, nrow =1, align = "h",
           common.legend = TRUE, legend = "bottom",
           font.label = list(size=18),
-          widths = c(2,1,1))
+          widths = c(1.5,1,1))
 
 ##Zoom in on EE FW size 1000x750
 ggarrange(EE4, EE1, EE2, EE5, EE3, 
