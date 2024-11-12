@@ -80,9 +80,9 @@ rm(EScode)
 ```
 #helpful website: https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html
 
-Figure 2: ES overall distribution across domains
+Figure 3: ES overall distribution across domains
 
-2.1: Data prep
+3.1: Data prep
 ```{r}
 h.CICES <- ES %>% group_by(CICES_section) %>% count(Hatchery_fish, sort = TRUE)
 h.CICES <- subset(h.CICES, Hatchery_fish != "No")
@@ -94,22 +94,20 @@ h.EE <- subset(h.EE, EE_domain != "N/A")
 ```
 
 
-2.2: Create graphs
+3.2: Create graphs
 ```{r}
 hFWC <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title.x=element_blank(), legend.title=element_blank(), axis.text=element_text(size=14),legend.text=element_text(size=14)) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
-  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red")) + ylab("# occurrences")
+  geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title=element_text(face="bold"), axis.text=element_text(size=14), legend.text=element_text(size=14)) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red")) + ylab("# occurrences") + xlab("CICES section")
 
 hFWE <- ggplot() + 
-  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title.x=element_blank(), legend.title=element_blank(), axis.text=element_text(size=14), legend.text=element_text(size=14)) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
-  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") + ylab("# occurrences")
+  geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title=element_text(face="bold"), legend.title=element_blank(), axis.text=element_text(size=14), legend.text=element_text(size=14)) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") + ylab("# occurrences") + xlab("EEScF domain")
 ```
 
-2.3: Create paneled graphic
+3.3: Create paneled graphic
 ```{r}
 ggarrange(hFWC, hFWE, 
-          labels = c("CICES","EEScF"),
-          label.x = 0.5,
           common.legend = TRUE, legend = "right",
           ncol = 1, nrow = 2, align = "v",
           font.label = list(size = 18),
@@ -118,9 +116,9 @@ ggarrange(hFWC, hFWE,
 ##print default dimensions 1500x750
 ```
 
-Figures 3-4: ES distribution within each framework
+Figures 4-5: ES distribution within each framework
 
-3-4.1: Rename long codes to make graphs easier to read
+4-5.1: Rename long codes to make graphs easier to read
 ```{r}
 EScode <- data.frame(
   original = c("Processing, Preserving, Cooking", "Indigenous Management Systems", "Indigenous Laws, Government & Institutions", "Passing to Future Generations", "Gatherings, Ceremonies", "Indigenous Commercial Fisheries", "Traditional Values", "Traditional Knowledge", "Spiritual & Belief Systems", "Treaties & Agreements"), 
@@ -131,7 +129,7 @@ ES <- FindReplace(data = ES, Var = "EE_code", replaceData = EScode, from = "orig
 rm(EScode)
 ```
 
-3-4.2: Create sub-data tables for graphing purposes
+4-5.2: Create sub-data tables for graphing purposes
 ```{r}
 ###For ES dist
 PES <- ES[ES$CICES_section=="Provisioning ",]#select for specific values
@@ -176,7 +174,7 @@ h.EE <- subset(h.EE, EE_code != "N/A")
 ##further subsets for hatchery ES mapping
 Ph.CICES <- h.CICES[h.CICES$CICES_code %in% c("energy", "materials", "novel biology", "nutrition","profit"), ]
 Rh.CICES <- h.CICES[h.CICES$CICES_code %in% c("freshwater quality", "invasive species", "nursery", "soil quality"), ]
-Ch.CICES <- h.CICES[h.CICES$CICES_code %>% c("active recreation", "aesthetic", "education", "existence", "heritage", "knowledge", "other", "religion"), ]
+Ch.CICES <- h.CICES[h.CICES$CICES_code %in% c("active recreation", "aesthetic", "education", "existence", "heritage", "knowledge", "other cultural", "religion"), ]
 
 Kh.EE <- h.EE[h.EE$EE_code %in% c("Fishing Activities"), ]
 Lh.EE <- h.EE[h.EE$EE_code %in% c("Food", "Indig Comm Fish"),]
@@ -185,7 +183,7 @@ Sh.EE <- h.EE[h.EE$EE_code %in% c("Ceremonies"),]
 #Hh.EE None for health
 ```
 
-3-4.3: Create graphs
+4-5.3: Create graphs
 ```{r}
 CICES1 <- ggplot() + 
   geom_bar(data=PES, color = "black", aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), width = 0.5, alpha =0.7) + 
@@ -214,9 +212,9 @@ CICES3 <- ggplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
   ylab("count")+ 
   coord_flip() + ylab("# occurrences") +
-  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) #+
-  #geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
- # scale_color_manual(values = c(Hatchery = "red")) #Removing code, since no hatchery fish in data, and including is adding an unnecessary NA bar
+  scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
+  geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
+  scale_color_manual(values = c(Hatchery = "red")) 
 
 EE1 <- ggplot() + 
   geom_bar(data=KEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) + 
@@ -232,7 +230,7 @@ EE2 <- ggplot() +
   geom_bar(data=LEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black",  width = 0.5, alpha = 0.7, show.legend = FALSE) + 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 45, by=20)) +
   theme_cowplot() + 
-  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
+  theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#CC6677")) +
   geom_bar(data = Lh.EE, aes(x=EE_code, y=n), width = 1, size =1.5, alpha = 0.01, color = "red", stat = "identity")
@@ -241,7 +239,7 @@ EE3 <- ggplot() +
   geom_bar(data=IEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 25, by=10)) +
   theme_cowplot() + 
-  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) +
+  theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) +
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#CC6677")) +
   geom_bar(data = Ih.EE, aes(x=EE_code, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity")
@@ -259,13 +257,13 @@ EE5 <- ggplot() +
   geom_bar(data=HEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 15, by=5)) +
   theme_cowplot() + 
-  theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
-  xlab("# occurrences") +
+  theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
+  ylab("# occurrences") +
   coord_flip() + 
   scale_fill_manual(values = c("#CC6677")) 
 ```
 
-3-4.4: Create panelled graphic
+4-5.4: Create panelled graphic
 ```{r}
 ##Zoom in on CICES FW SIZE500 x 750 
 ggarrange(CICES1, CICES2, CICES3,
@@ -274,7 +272,7 @@ ggarrange(CICES1, CICES2, CICES3,
           ncol = 3, nrow =1, align = "h",
           common.legend = TRUE, legend = "bottom",
           font.label = list(size=18),
-          widths = c(1.5,1,1))
+          widths = c(2,1.5,1))
 
 ##Zoom in on EE FW size 1000x750
 ggarrange(EE4, EE1, EE2, EE5, EE3, 
@@ -288,9 +286,9 @@ ggarrange(EE4, EE1, EE2, EE5, EE3,
 #refer to https://search.r-project.org/CRAN/refmans/ggpubr/html/ggarrange.html for label positions
 ```
 
-Figure 5: Word clouds
+Figure 7: Word clouds
 
-5.1: Data prep
+7.1: Data prep
 ```{r}
 ## Subset data to include only Category and Sentence_about_service
 word.clouds <- select(data, c("Category","Sentence_about_service"))
@@ -364,7 +362,7 @@ word_freq_eco <- data.frame(word = names(dtm_eco_v),freq=dtm_eco_v)
 head(word_freq_all, 10)
 ```
 
-5.2: Make word clouds
+7.2: Make word clouds
 ```{r}
 #generate word cloud
 word_freq_eco$word=str_replace_all(word_freq_eco$word,"[^[:graph:]]", " ")
@@ -394,7 +392,7 @@ socio.plot <- ggplot(data = word_freq_socio[1:30,],
 
 ```
 
-5.3: Make word clouds appear on one graphic
+7.3: Make word clouds appear on one graphic
 ```{r}
 ##arrange word clouds on one graphic
 
