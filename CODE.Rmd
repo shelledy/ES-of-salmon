@@ -29,8 +29,8 @@ library("forcats")
 
 Step 1: Upload applicable data sets
 ```{r}
-rawdata <- read.csv("RawDataB.csv")
-services <- read.csv("ServicesB.csv")
+rawdata <- read.csv("RawDataS1.csv")
+services <- read.csv("CodingS2.csv")
 ```
 
 Step 2: Prep datasets (pare down, combine)
@@ -113,7 +113,7 @@ ggarrange(hFWC, hFWE,
           font.label = list(size = 18),
           heights = c(2,1))
 
-##print default dimensions 1500x750
+##print default dimensions 1300x600
 ```
 
 Figures 4-5: ES distribution within each framework
@@ -265,7 +265,7 @@ EE5 <- ggplot() +
 
 4-5.4: Create panelled graphic
 ```{r}
-##Zoom in on CICES FW SIZE500 x 750 
+##Zoom in on CICES FW SIZE 1500 x 850 
 ggarrange(CICES1, CICES2, CICES3,
           labels = c("Provisioning", "Regulation/Maintenance", "Cultural"),
           label.x = c(0.3, 0.3, 0.5),
@@ -274,10 +274,10 @@ ggarrange(CICES1, CICES2, CICES3,
           font.label = list(size=18),
           widths = c(2,1.5,1))
 
-##Zoom in on EE FW size 1000x750
+##Zoom in on EE FW size 1500x1000
 ggarrange(EE4, EE1, EE2, EE5, EE3, 
           labels = c("Social", "Knowledge & Practices", "Livelihood", "Health", "Indig Management"),
-          hjust=0, vjust=0.8,
+          hjust=0, vjust=0.9,
           ncol = 3, nrow = 2, align ="hv",
           common.legend = TRUE, legend = "bottom",
           font.label = list(size=18),
@@ -394,7 +394,7 @@ socio.plot <- ggplot(data = word_freq_socio[1:30,],
 
 7.3: Make word clouds appear on one graphic
 ```{r}
-##arrange word clouds on one graphic
+##arrange word clouds on one graphic 660 x 480
 
 ggarrange(eco.plot, socio.plot,
           labels = c("A", "B"), font.label = list(size = 18, face = "bold"), 
