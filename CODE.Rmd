@@ -71,8 +71,8 @@ rm(ES1,ES2,ES3)
 Step 4: Rename CICES codes with meanings
 ```{r}
 EScode <- data.frame(
-  code = c("1.1.4.1","1.1.4.2","1.1.4.3","1.1.6.1","1.1.6.2","1.1.6.3","1.2.2.1","1.2.2.3","1.3.X.X","2.1.1.2","2.2.1.1","2.2.1.3","2.2.2.1","2.2.2.2","2.2.2.3","2.2.3.1","2.2.4.2","2.2.5.1","2.2.5.2","2.3.X.X","3.1.1.1","3.1.1.2","3.1.2.1","3.1.2.2","3.1.2.3","3.1.2.4","3.2.1.1","3.2.1.2","3.2.1.3","3.2.2.1","3.2.2.2","3.3.X.X"), 
-  name = c( "nutrition","materials","energy","nutrition","materials","energy","biodiversity","novel biology","profit","C sequestration","erosion","water flow","pollination","seed dispersal","nursery","invasive species","soil quality","freshwater quality","marine water quality","other reg","active recreation","passive recreation","knowledge","education","heritage","aesthetic","symbol","religion","representation","existence","bequest","other cultural"))
+  code = c("1.1.4.1","1.1.4.2","1.1.4.3","1.1.6.1","1.1.6.2","1.1.6.3","1.2.2.1","1.2.2.3","2.1.1.2","2.2.1.1","2.2.1.3","2.2.2.1","2.2.2.2","2.2.2.3","2.2.3.1","2.2.4.2","2.2.5.1","2.2.5.2","2.3.X.X","3.1.1.1","3.1.1.2","3.1.2.1","3.1.2.2","3.1.2.3","3.1.2.4","3.2.1.1","3.2.1.2","3.2.1.3","3.2.2.1","3.2.2.2","3.3.X.X"), 
+  name = c( "nutrition","materials","energy","nutrition","materials","energy","biodiversity","novel biology","C sequestration","erosion","water flow","pollination","seed dispersal","nursery","invasive species","soil quality","freshwater quality","marine water quality","other reg","active recreation","passive recreation","knowledge","education","heritage","aesthetic","symbol","religion","representation","existence","bequest","other cultural"))
 
 ES <- FindReplace(data = ES, Var = "CICES_code", replaceData = EScode, from = "code", to = "name", exact = TRUE, vector = FALSE)
 
@@ -98,11 +98,11 @@ h.EE <- subset(h.EE, EE_domain != "N/A")
 ```{r}
 hFWC <- ggplot() + 
   geom_bar(data=ES[complete.cases(ES[, "CICES_section"]), ], aes(fct_inorder(CICES_section), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05))) + theme(axis.title=element_text(face="bold"), axis.text=element_text(size=14), legend.text=element_text(size=14)) + scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) + 
-  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red")) + ylab("# occurrences") + xlab("CICES section")
+  geom_bar(data = h.CICES, aes(x=CICES_section, y=n, color = "Hatchery"), width = 1, linewidth = 1.5, alpha = 0.01, stat = "identity") + scale_color_manual(values = c(Hatchery = "red")) + ylab("# occurrences") + xlab("CICES section") + geom_text(data = h.CICES, aes(x=CICES_section, y=n+40, label=n, fontface='bold'), color="red", size=5)
 
 hFWE <- ggplot() + 
   geom_bar(data=ES[complete.cases(ES[, "EE_domain"]), ], aes(fct_inorder(EE_domain), fill = Category), alpha = 0.7, color = "black", width = 0.5) + theme_cowplot() + scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + theme(axis.title=element_text(face="bold"), legend.title=element_blank(), axis.text=element_text(size=14), legend.text=element_text(size=14)) + scale_fill_manual(values = c("#332288", "#CC6677","#44AA99")) +
-  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") + ylab("# occurrences") + xlab("EEScF domain")
+  geom_bar(data = h.EE, aes(x=EE_domain, y=n), width = 1, linewidth = 1.5, alpha = 0.01, color = "red", stat = "identity") + ylab("# occurrences") + xlab("EEScF domain") + geom_text(data = h.EE, aes(x=EE_domain, y=n+20, label=n, fontface='bold'), color="red", size=5)
 ```
 
 3.3: Create paneled graphic
@@ -193,7 +193,8 @@ CICES1 <- ggplot() +
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "both")) +
   geom_bar(data = Ph.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), size = 1.5, width = 1, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red"))
+  scale_color_manual(values = c(Hatchery = "red")) +
+  geom_text(data = Ph.CICES, aes(x=CICES_code, y=n+50, label=n, fontface='bold'), color="red", size=5)
 
 CICES2 <- ggplot() + 
   geom_bar(data=RES, aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) +
@@ -203,18 +204,20 @@ CICES2 <- ggplot() +
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
   geom_bar(data = Rh.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red"))
+  scale_color_manual(values = c(Hatchery = "red")) +
+  geom_text(data = Rh.CICES, aes(x=CICES_code, y=n+8, label=n, fontface='bold'), color="red", size=5)
 
 CICES3 <- ggplot() + 
   geom_bar(data=CES, aes(x=fct_rev(fct_infreq(CICES_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 75, by=25)) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), breaks = seq(0, 150, by=50)) + 
   theme_cowplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), legend.title = element_blank(), axis.title.y=element_blank()) + 
   ylab("count")+ 
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#44AA99", "#CC6677")) +
   geom_bar(data = Ch.CICES, aes(x=CICES_code, y=n, color = "Hatchery"), width = 1, size = 1.5, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red")) 
+  scale_color_manual(values = c(Hatchery = "red")) +
+  geom_text(data = Ch.CICES, aes(x=CICES_code, y=n+45, label=n, fontface='bold'), color="red", size=5)
 
 EE1 <- ggplot() + 
   geom_bar(data=KEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7) + 
@@ -224,7 +227,8 @@ EE1 <- ggplot() +
   coord_flip() +
   scale_fill_manual(values = c("#CC6677", "#44AA99", "#332288"), breaks = c("socio", "eco", "eco&socio")) + 
   geom_bar(data = Kh.EE, aes(x=EE_code, y=n, color = "Hatchery"), width = 1, size =1.5, alpha = 0.01, stat = "identity") +
-  scale_color_manual(values = c(Hatchery = "red"))
+  scale_color_manual(values = c(Hatchery = "red"))+
+  geom_text(data = Kh.EE, aes(x=EE_code, y=n+2, label=n, fontface='bold'), color="red", size=5)
 
 EE2 <- ggplot() + 
   geom_bar(data=LEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black",  width = 0.5, alpha = 0.7, show.legend = FALSE) + 
@@ -233,7 +237,8 @@ EE2 <- ggplot() +
   theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#332288", "#CC6677")) +
-  geom_bar(data = Lh.EE, aes(x=EE_code, y=n), width = 1, size =1.5, alpha = 0.01, color = "red", stat = "identity")
+  geom_bar(data = Lh.EE, aes(x=EE_code, y=n), width = 1, size =1.5, alpha = 0.01, color = "red", stat = "identity")+
+  geom_text(data = Lh.EE, aes(x=EE_code, y=n+3, label=n, fontface='bold'), color="red", size=5)
 
 EE3 <- ggplot() + 
   geom_bar(data=IEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
@@ -242,7 +247,8 @@ EE3 <- ggplot() +
   theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) +
   coord_flip() + ylab("# occurrences") +
   scale_fill_manual(values = c("#CC6677")) +
-  geom_bar(data = Ih.EE, aes(x=EE_code, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity")
+  geom_bar(data = Ih.EE, aes(x=EE_code, y=n), width = 1, size = 1.5, alpha = 0.01, color = "red", stat = "identity")+
+  geom_text(data = Ih.EE, aes(x=EE_code, y=n+1, label=n, fontface='bold'), color="red", size=5)
 
 EE4 <- ggplot() + 
   geom_bar(data=SEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
@@ -251,7 +257,8 @@ EE4 <- ggplot() +
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank(), axis.title.x=element_blank()) + 
   coord_flip() +
   scale_fill_manual(values = c("#CC6677")) +
-  geom_bar(data = Sh.EE, aes(x=EE_code, y=n), width = 1, size=1.5, alpha = 0.01, color = "red", stat = "identity")
+  geom_bar(data = Sh.EE, aes(x=EE_code, y=n), width = 1, size=1.5, alpha = 0.01, color = "red", stat = "identity")+
+  geom_text(data = Sh.EE, aes(x=EE_code, y=n+5, label=n, fontface='bold'), color="red", size=5)
 
 EE5 <- ggplot() + 
   geom_bar(data=HEES, aes(x=fct_rev(fct_infreq(EE_code)), fill = Category), color = "black", width = 0.5, alpha = 0.7, show.legend = FALSE) + 
@@ -260,7 +267,7 @@ EE5 <- ggplot() +
   theme(axis.title.x=element_text(face="bold"), axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text = element_text(size=16), axis.title.y=element_blank()) + 
   ylab("# occurrences") +
   coord_flip() + 
-  scale_fill_manual(values = c("#CC6677")) 
+  scale_fill_manual(values = c("#CC6677"))
 ```
 
 4-5.4: Create panelled graphic
@@ -434,6 +441,6 @@ ggplot(ES, aes(x=EE_code, y=CICES_code))+ geom_count(aes(alpha=0.5,color=Hatcher
   theme(axis.text=element_text(size=16), axis.title=element_text(size=18), legend.text=element_text(size=16), axis.text.x=element_text(angle=90, vjust=0.5, hjust=1), axis.text.y=element_text(lineheight = 0.5))+
   facet_grid(CICES_section ~ EE_domain, scales="free", space = "free") + theme(strip.text=element_text(size=10)) +
   ylab("CICES service") + xlab("EEScF value") + guides(alpha="none")
-#600 height by 1000 width
+#1000 width by 600 height
 
 ```
